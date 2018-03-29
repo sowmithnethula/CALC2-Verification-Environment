@@ -1,16 +1,19 @@
 
 class monitor_out;
 
+virtual calc2_intf.tb_mon_out vif;
+mailbox #(packet) mbx_ms;//will be connected to input of scoreboard
+
 string name;
 bit [15:0] no_of_pkts_recvd;
-packet   pkt;
-virtual calc2_intf.tb_mon_out vif;
-mailbox #(packet) mbx;//will be connected to input of scoreboard
+packet   pkt_capture;
+
+
 
 function new (input mailbox #(packet) mbx_in,
               input virtual memory_if.tb_mon_out vif_in,
 	      input string name="oMonitor");
-this.mbx = mbx_in;
+this.mbx_ms = mbx_in;
 this.vif = vif_in;
 this.name=name;
 endfunction
@@ -19,28 +22,42 @@ task run();
 $display("@%0t [%s] run started \n",$time,name); 
 while(1) 
 begin
-@(vif.cb_mon_out.out_data1 or vif.cb_mon_out.out_data1 or vif.cb_mon_out.out_data1 or vif.cb_mon_out.out_data1);
+@(vif.cb_mon_out.out_tag1 or vif.cb_mon_out.out_tag2 or vif.cb_mon_out.out_tag3 or vif.cb_mon_out.out_tag4);
 
-pkt=new;
+pkt_capture = new;
 
-pkt.data1  = vif.cb_mon_out.out_data1;
-pkt.data2  = vif.cb_mon_out.out_data2;
-pkt.data3  = vif.cb_mon_out.out_data3;
-pkt.data4  = vif.cb_mon_out.out_data4;
+if (vif.cb_mon_out.out_tag1 == 1)
+begin
+	pkt_capture.cap_out_data1  = vif.cb_mon_out.out_data1;
+	pkt_capture.cap_tag1  = vif.cb_mon_out.out_tag1;
+	pkt_capture.cap_resp1  = vif.cb_mon_out.out_resp1;
+end
 
-pkt.tag1  = vif.cb_mon_out.out_tag1;
-pkt.tag2  = vif.cb_mon_out.out_tag2;
-pkt.tag3  = vif.cb_mon_out.out_tag3;
-pkt.tag4  = vif.cb_mon_out.out_tag4;
+else if (vif.cb_mon_out.out_tag2 == 1)
+begin
+	pkt_capture.cap_out_data2  = vif.cb_mon_out.out_data2;
+	pkt_capture.cap_tag2  = vif.cb_mon_out.out_tag2;
+	pkt_capture.cap_resp2  = vif.cb_mon_out.out_resp2;
+end
 
-pkt.resp1  = vif.cb_mon_out.out_resp1;
-pkt.resp2  = vif.cb_mon_out.out_resp2;
-pkt.resp3  = vif.cb_mon_out.out_resp3;
-pkt.resp4  = vif.cb_mon_out.out_resp4;
+else if (vif.cb_mon_out.out_tag3 == 1)
+begin
+	pkt_capture.cap_out_data3  = vif.cb_mon_out.out_data3;
+	pkt_capture.cap_tag3  = vif.cb_mon_out.out_tag3;
+	pkt_capture.cap_resp3  = vif.cb_mon_out.out_resp3;
+end
 
-mbx.put(pkt);
+else if (vif.cb_mon_out.out_tag4 == 1)
+begin
+	pkt_capture.cap_out_data4  = vif.cb_mon_out.out_data4;
+	pkt_capture.cap_tag4  = vif.cb_mon_out.out_tag4;
+	pkt_capture.cap_resp4  = vif.cb_mon_out.out_resp4;
+end
+
+
+mbx_ms.put(pkt_capture);
 no_of_pkts_recvd++;
-pkt.print();
+pkt_capture.print_out();
 $display("@%0t [%s] Sent packet %0d to scoreboard \n",$time,name,no_of_pkts_recvd); 
 end
 
