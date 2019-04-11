@@ -1,14 +1,36 @@
+`include "calc_env/calc2_interfaces.sv"
+`include "tests/test_bench.sv"
 
-`include "calc2_intf.sv"
-`include "program.sv"
-`include "calc2_top.sv"
+//`include "empty.v"
+
+
 
 module top;
 
-bit c_clk;
+bit c_clk,reset;
 always #10 c_clk++;
 
-calc2_intf intf (c_clk);
+
+initial
+begin
+reset = 1;
+repeat (5)
+begin
+@(posedge c_clk);
+end
+reset = 0;
+
+#50000;
+
+$stop;
+
+end
+
+
+
+
+calc2_intf calc2_intf (c_clk,reset);
+
 calc2_top DUT ( .out_data1(calc2_intf.out_data1), .out_data2(calc2_intf.out_data2), .out_data3(calc2_intf.out_data3), .out_data4(calc2_intf.out_data4), 
 				.out_resp1(calc2_intf.out_resp1), .out_resp2(calc2_intf.out_resp2), .out_resp3(calc2_intf.out_resp3), .out_resp4(calc2_intf.out_resp4), 
 				.out_tag1(calc2_intf.out_tag1), .out_tag2(calc2_intf.out_tag2), .out_tag3(calc2_intf.out_tag3), .out_tag4(calc2_intf.out_tag4), 
@@ -20,5 +42,6 @@ calc2_top DUT ( .out_data1(calc2_intf.out_data1), .out_data2(calc2_intf.out_data
 				.req4_cmd_in(calc2_intf.req4_cmd_in), .req4_data_in(calc2_intf.req4_data_in), .req4_tag_in(calc2_intf.req4_tag_in), 
 				.reset(calc2_intf.reset), .scan_in(calc2_intf.scan_in));
 
+program_test test (calc2_intf);				
 
 endmodule
